@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.1.1
+	ver: 0.0.1
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -148,10 +148,11 @@ chat:
 			set message to "&f%message%"
 
 command:
-    loop {blockedcommands::*}:
-        loop-value = "%command%":
-            cancel event
-            send "&cCommand blocked."
+	{@commandBlocker} = true:
+		loop {blockedcommands::*}:
+			loop-value = "%command%":
+				cancel event
+				send "&cCommand blocked."
 
 # Commands
 
