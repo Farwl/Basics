@@ -1,9 +1,151 @@
 
-# CommandBlocker by Farwl@FarwlOSS
+# Basics by Farwl
+
+# # #
+
+Options:
+	ver: 0.0.1
+	np: &cYou're not allowed to use this command!
+
+# CONFIG 
+
+	welcomeNewPlayers: true
+	# Checks whether not to broadcast a welcome message for new players
+
+	playerJoinBroadcast: true
+	# Checks whether not to broadcast a message when a player joins
+
+	playerQuitBroadcast: true
+	# Checks whether not to broadcast a message when a player leaves
+
+	feedWhenHeal: false
+	# Checks whether not to heal AND feed the player when using the /heal command
+
+	hunger: true
+	# Enable or disable hunger across your server
+
+	accountsPerIP: 0
+	# The number of accounts allowed to be connected to your server from the same IP at one time
+	# Must be set to an integer, set to 0 to disable
+
+	spawnDelay: 5
+	# The delay, in seconds, before a player is teleported to spawn
+	# Must be set to an integer, set to 0 to disable
+
+	commandBlocker: true
+	# Enable or disable the built-in command blocker feature
+
+# CONFIG 
 
 # CODE #
 
+# Functions
+
+function gmU(p: player):
+	send "&3Gamemode updated." to {_p}
+
+function eop(p: player):
+	send "&cCouldn't find that player, they're probably offline." to {_p}
+
+function enp(p: player):
+	send "{@np}" to {_p}
+
+function pS(v: string, p: string, id: string):
+	loop all players:
+		{_id} = "p" or "pling":
+			play sound "block.note.pling" with volume {_v} with pitch {_p} at loop-player for loop-player
+		else if {_id} = "t" or "totem" or "punish":
+			play sound "item.totem.use" with volume {_v} with pitch {_p} at loop-player for loop-player
+		else if {_id} = "f" or "flap":
+			play sound "entity.enderdragon.flap" with volume {_v} with pitch {_p} at loop-player for loop-player
+
 # Events
+
+#Hunger
+food bar change:
+	{@hunger} != true:
+		cancel event
+
+#Connections
+first join:
+	add 1 to {joins::*}
+	{@welcomeNewPlayers} = true:
+		broadcast "&3%player% &7joined for the first time (&a##%size of {joins::*}%&7)"
+
+join:
+	{@playerJoinBroadcast} = true:
+		broadcast "&a[+] &7%player%"
+
+quit:
+	{@playerQuitBroadcast} = true:
+		broadcast "&c[-] &7%player%"
+
+#Load
+skript load:
+	send "%nl%[Basics] Version {@ver} loaded." to console
+
+#BlockedCommands
+command:
+	command sender is player:
+		command is "reload" or "rl" or "essentials:help" or "ver" or "version" or "?" or "help" or "ehelp" or "bukkit:?" or "bukkit:about" or "bukkit:help" or "bukkit:reload" or "bukkit:rl" or "bukkit:timings" or "bukkit:ver" or "bukkit:version" or "pl" or "plugins" or "plugin" or "bukkit:pl" or "bukkit:plugins":
+			cancel event
+			enp(player)
+
+#ConnectWhileBanned
+connect:
+	{isBanned::%player's uuid%} = true:
+		{banSpan::%player's uuid%} = "PERM":
+			{banReason::%player's uuid%} != false:
+				kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%%nl%&c* &7Reason: &c%{banReason::%player's uuid%}%"
+			else:
+				kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%"
+		else:
+			difference between {banStamp::%player's uuid%} and now >= {banSpan::%player's uuid%}:
+				clear {isBanned::%player's uuid%}
+				clear {banSpan::%player's uuid%}
+				clear {banStamp::%player's uuid%}
+				clear {banMod::%player's uuid%}
+				clear {banReason::%player's uuid%}				
+			else:
+				{banReason::%player's uuid%} != false:
+					kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%%nl%&c* &7Reason: &c%{banReason::%player's uuid%}%"
+				else:
+					kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%"
+	else:
+		set {_p} to player
+		loop all players:
+			loop-player != {_p}:
+				loop-player's ip = {_p}'s ip:
+					add 1 to {_ips}
+					{@accountsPerIP} != 0:
+						if {_ips} > {@accountsPerIP}:
+							kick player due to "&cYou have too many accounts connected, the maximum is {@accountsPerIP}"
+
+#Chat
+chat:
+	{isMuted::%player's uuid%} = true:
+		{muteSpan::%player's uuid%} = "PERM":
+			cancel event
+			{muteReason::%player's uuid%} != false:
+				send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%%nl%&c* &7Reason: &c%{muteReason::%player's uuid%}%"
+			else:
+				send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%"
+		else:
+			difference between {muteStamp::%player's uuid%} and now >= {muteSpan::%player's uuid%}:
+				clear {isMuted::%player's uuid%}
+				clear {muteSpan::%player's uuid%}
+				clear {muteStamp::%player's uuid%}
+				clear {muteMod::%player's uuid%}
+				clear {muteReason::%player's uuid%}				
+			else:
+				cancel event
+				{muteReason::%player's uuid%} != false:
+					send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%%nl%&c* &7Reason: &c%{muteReason::%player's uuid%}%"
+				else:
+					send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%"
+	else:
+		player has permission "basics.chat.white":
+			set message to "&f%message%"
 
 command:
     loop {blockedcommands::*}:
@@ -13,9 +155,46 @@ command:
 
 # Commands
 
+#Basics
+command /basics [<text>]:
+	aliases: /basics:basics
+	permission: basic.admin
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 = "reload" or "rl":
+				execute console command "/sk reload %script%"
+				send "&dBasics reloaded &c{@ver}"
+			else if arg-1 = "ver" or "v":
+				send "&dBasics &c{@ver}"
+			else:
+				send "&c/basics [reload|version]"
+		else:
+			send "&c/basics [reload|version]"
+
+#ClearInv
+command /clear [<player>]:
+	aliases: /basics:ci, /ci, /basics:clear
+	permission: basics.clear
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.clear.others":
+					clear arg-1's inventory
+					send "&3Inventory cleared." to arg-1
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			clear player's inventory
+			send "&3Inventory cleared." to player
+
+#CommandBlocker
 command /commandblocker [<text>]:
-	aliases: /cb:commandblocker, /cb, /cb:cb
-	permission: cb.commandblocker
+	aliases: /basics:commandblocker, /cb, /basics:cb
+	permission: basics.commandblocker
 	permission message: {@np}
 	trigger:
 		set {_a::*} to (the args) split at " "
@@ -50,3 +229,544 @@ command /commandblocker [<text>]:
 				send "&c/cb [add/remove/list] [command]"
 		else:
 			send "&c/cb [add/remove/list] [command]"
+
+
+#Feed
+command /feed [<player>]:
+	aliases: /basics:feed
+	permission: basics.feed
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				set arg-1's food level to 10
+				send "&3You have been saturated." to arg-1
+			else:
+				eop(player)
+		else:
+			set the player's food level to 10
+			send "&3You have been saturated." to player
+
+#Flight
+command /fly [<player>]:
+	aliases: /basics:fly
+	permission: basics.fly,
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			player has permission "basics.fly.others":
+				arg-1 is online:
+					arg-1 can fly:
+						disable flight for player
+						send "&3You can no longer fly." to player
+					else:
+						enable flight for arg-1
+						send "&3You can now fly." to arg-1
+				else:
+					eop(player)
+			else:
+				enp(player)
+		else:
+			player can fly:
+				disable flight for player
+				send "&3You can no longer fly." to player
+			else:
+				enable flight for player
+				send "&3You can now fly." to player
+
+#Gamemode
+command /gamemode [<text>] [<player>]:
+	aliases: /basics:gamemode, /gm, /basics:gm
+	permission: basics.gamemode
+	permission message: {@np}
+	trigger:
+		arg-1 and arg-2 are set:
+			arg-2 is online:
+				arg-1 = "creative" or "survival" or "adventure" or "spectator":
+					set {_g} to arg-1 parsed as gamemode
+					set arg-2's gamemode to {_g}
+					gmU(player)
+				else if arg-1 = "c" or "1":
+					set arg-2's gamemode to creative
+					gmU(player)
+				else if arg-1 = "s" or "0":
+					set arg-2's gamemode to survival
+					gmU(player)
+				else if arg-1 = "a" or "2":
+					set arg-2's gamemode to adventure
+					gmU(player)
+				else if arg-1 = "s" or "sp" or "3":
+					set arg-2's gamemode to spectator
+					gmU(player)
+			else:
+				eop(player)
+		else:
+			send "&c/gamemode [gamemode] [player]"
+
+#GamemodeShortAliases
+command /gmc [<player>]:
+	aliases: /basics:gmc
+	permission: basics.gamemode.creative
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.gamemode.creative.others":
+					set arg-1's gamemode to creative
+					gmU(player)
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			set player's gamemode to creative
+			gmU(player)
+
+command /gma [<player>]:
+	aliases: /basics:gma
+	permission: basics.gamemode.adventure
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.gamemode.adventure.others":
+					set arg-1's gamemode to adventure
+					gmU(player)
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			set player's gamemode to adventure
+			gmU(player)
+
+
+command /gms [<player>]:
+	aliases: /basics:gms
+	permission: basics.gamemode.survival
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.gamemode.survival.others":
+					set arg-1's gamemode to survival
+					gmU(player)
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			set player's gamemode to survival
+			gmU(player)
+
+command /gmsp [<player>]:
+	aliases: /basics:gmsp
+	permission: basics.gamemode.gmc
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.gamemode.spectator.others":
+					set arg-1's gamemode to spectator
+					gmU(player)
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			set player's gamemode to spectator
+			gmU(player)
+
+#Heal
+command /heal [<player>]:
+	aliases: /basics:heal
+	permission: basics.heal
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.heal.others":
+					heal arg-1
+					send "&3You have been healed." to arg-1
+					{@feedWhenHeal} = true:
+						set arg-1's food level to 10
+				else:
+					enp(player)
+			else:
+				eop(player)		
+		else:
+			heal the player
+			send "&3You have been healed." to player
+			{@feedWhenHeal} = true:
+				set the player's food level to 10
+
+#SetSpawn
+command /setspawn:
+	aliases: /basics:setspawn
+	permission: basics.setspawn
+	permission message: {@np}
+	trigger:
+		set spawn to location of player
+		send "&3Spawn set. &b(%location of player%)"
+
+#Spawn
+command /spawn [<player>]:
+	aliases: /basics:spawn
+	permission: basics.spawn
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				player has permission "basics.spawn.others":
+					teleport arg-1 to spawn
+					send "&3Teleporting..." to player
+				else:
+					enp(player)
+			else:
+				eop(player)
+		else:
+			{@spawnDelay} > 0:
+				player has permission "basics.spawn.bypassDelay":
+					teleport player to spawn
+					send "&3Teleporting..."
+				else:
+					send "&3Teleporting..."
+					wait {@spawnDelay} seconds
+					teleport player to spawn
+			else:
+				teleport player to spawn
+
+# Punishments
+
+#Warn
+command /warn [<offlineplayer>] [<text>]:
+	aliases: /basics:warn
+	permission: basics.warn
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			add 1 to {warns::%arg-1's uuid%}
+			arg-2 is set:
+				broadcast "&3%player% &7warned &3%arg-1% &7for &c%arg-2% &7[##%{warns::%arg-1's uuid%}%]"
+			else:
+				broadcast "&3%player% &7warned &3%arg-1% &7[##%{warns::%arg-1's uuid%}%]"
+		else:
+			send "&c/warn [player] <reason>"
+
+#RevertWarn
+command /revertwarn [<offlineplayer>] [<text>]:
+	aliases: /basics:revertwarn, /unwarn, /basics:unwarn
+	permission: basics.revertwarn
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			{warns::%player's uuid%} > 0:
+				send "&cThat player doesn't have any warnings!" 
+			else:	
+				pS("1", "0.8", "p")
+				remove 1 from {warns::%player's uuid%}
+				arg-2 is set:
+					broadcast "&3%player% &7unwarned &3%arg-1% &7for &c%arg-2% &7[##%{warns::%arg-1's uuid%}%]"
+				else:
+					broadcast "&3%player% &7unwarned &3%arg-1% &7[##%{warns::%arg-1's uuid%}%]"
+		else:
+			send "&c/revertwarn [player] <reason>"
+
+#Clearchat
+command /clearchat:
+	aliases: /basics:clearchat, /cc, /basics:cc
+	permission: basics.clearchat
+	permission message: {@np}
+	trigger:
+		loop 250 times:
+			broadcast " "
+		broadcast "&7Chat was cleared by &3%player%"
+
+#Kick
+command /kick [<player>] [<text>]:
+	aliases: /basics:kick
+	permission: basics.kick
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 is online:
+				arg-2 is set:
+					kick arg-1 due to "&cYou were kicked from the server.%nl%&c* &7Reason: &c%arg-2%"
+					pS("1", "0.8", "f")
+				else:
+					kick arg-1 due to "&cYou were kicked from the server."
+					pS("1", "0.8", "f")
+			else:
+				eop(player)
+		else:
+			send "&c/kick [player] <reason>"
+
+#Kickall
+command /kickall [<text>]:
+	aliases: /basics:kickall
+	permission: basics.kickall
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			pS("1", "0.8", "f")
+			set {_p} to player
+			loop all players:
+				loop-player != {_p}:
+					kick loop-player due to "&cYou were kicked from the server.%nl%&c* &7Reason: &c%arg-1%"
+		else:
+			pS("1", "0.8", "f")
+			set {_p} to player
+			loop all players:
+				loop-player != {_p}:
+					kick loop-player due to "&cYou were kicked from the server."
+
+#Ban
+command /ban [<offlineplayer>] [<text>]:
+	aliases: /basics:ban
+	permission: basics.ban
+	permission message: {@np}
+	trigger:
+		arg-1 and arg-2 are set:
+			set {_s::*} to split arg-2 at " "
+			set {_span} to {_s::1}
+			set {_len} to length of {_span}
+			set {_lenwhole} to length of arg-2
+			set {_lendiff} to {_lenwhole} - {_len}
+			size of {_s::*} = 1:
+				set {_r} to false
+			else:
+				set {_r} to last ({_lendiff} - 1) characters of arg-2
+			{_span} = "forever" or "perm" or "permanent":
+				player has permission "basics.ban.perm":
+					set {isBanned::%arg-1's uuid%} to true
+					set {banSpan::%arg-1's uuid%} to "PERM"
+					set {banStamp::%arg-1's uuid%} to now
+					set {banMod::%arg-1's uuid%} to player
+					clear {banReason::%arg-1's uuid%}
+					pS("1", "0.4", "t")
+					{_r} != false:
+						set {banReason::%arg-1's uuid%} to {_r}
+						ban arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &cFOREVER%nl%&c* &7Reason: &c%{banReason::%arg-1's uuid%}%"
+						kick arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &cFOREVER%nl%&c* &7Reason: &c%{banReason::%arg-1's uuid%}%"
+						broadcast "&3%player% &7banned &3%arg-1% &7for &c%{banReason::%arg-1's uuid%}% &7[FOREVER]"
+					else:
+						ban arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &cFOREVER"
+						kick arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &cFOREVER"
+						broadcast "&3%player% &7banned &3%arg-1% &7[FOREVER]"
+				else:
+					enp(player)
+			else:
+				set {_tryParse::*} to timeParser({_span})
+				set {_res} to {_tryParse::1}
+				{_res} = "error":
+					send "&cInvalid timespan!%nl% &7(Ex. 7y6mo5w4d3h2m1s)"
+				else:
+					set {_timespan} to "%{_res}% seconds" parsed as timespan
+					unban arg-1
+					set {isBanned::%arg-1's uuid%} to true
+					set {banSpan::%arg-1's uuid%} to {_timespan}
+					set {banStamp::%arg-1's uuid%} to now
+					set {banMod::%arg-1's uuid%} to player
+					clear {banReason::%arg-1's uuid%}
+					pS("1", "0.4", "t")
+					{_r} != false:
+						set {banReason::%arg-1's uuid%} to {_r}
+						broadcast "&3%player% &7banned &3%arg-1% &7for &c%{_r}% &7[%{banSpan::%arg-1's uuid%}%]"
+						kick arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &c%{banSpan::%arg-1's uuid%}%%nl%&c* &7Reason: &c%{banReason::%arg-1's uuid%}%"
+					else:
+						broadcast "&3%player% &7banned &3%arg-1% &7[%{banSpan::%arg-1's uuid%}%]"
+						kick arg-1 due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%arg-1's uuid%}%%nl%&c* &7Mod: &c%{banMod::%arg-1's uuid%}%%nl%&c* &7Length: &c%{banSpan::%arg-1's uuid%}%"
+		else:
+			send "&c/ban [player] [timespan] <reason>"
+
+
+#Mute
+command /mute [<offline player>] [<text>]:
+	aliases: /basics:mute
+	permission: basics.mute
+	permission message: {@np}
+	trigger:
+		arg-1 and arg-2 are set:
+			set {_s::*} to split arg-2 at " "
+			set {_span} to {_s::1}
+			set {_len} to length of {_span}
+			set {_lenwhole} to length of arg-2
+			set {_lendiff} to {_lenwhole} - {_len}
+			set {_zerospan} to 0 seconds
+			size of {_s::*} = 1:
+				set {_r} to false
+			else:
+				set {_r} to last ({_lendiff} - 1) characters of arg-2
+			{_span} = "forever" or "perm" or "permanent":
+				player has permission "basics.mute.perm":
+					set {isMuted::%arg-1's uuid%} to true
+					set {muteSpan::%arg-1's uuid%} to "PERM"
+					set {muteStamp::%arg-1's uuid%} to now
+					set {muteMod::%arg-1's uuid%} to player
+					clear {muteReason::%arg-1's uuid%}
+					pS("1", "0.6", "t")
+					{_r} != false:
+						set {muteReason::%arg-1's uuid%} to {_r}
+						broadcast "&3%player% &7muted &3%arg-1% &7for &c%{muteReason::%arg-1's uuid%}% &7[FOREVER]"
+					else:
+						broadcast "&3%player% &7muted &3%arg-1% &7[FOREVER]"					
+				else:
+					enp(player)
+			else:
+				set {_tryParse::*} to timeParser({_span})
+				set {_res} to {_tryParse::1}
+				{_res} = "error":
+					send "&cInvalid timespan!%nl% &7(Ex. 7y6mo5w4d3h2m1s)"
+				else:
+					set {_timespan} to "%{_res}% seconds" parsed as timespan
+				{_timespan} > {_zerospan}:
+					set {isMuted::%arg-1's uuid%} to true
+					set {muteSpan::%arg-1's uuid%} to {_timespan}
+					set {muteStamp::%arg-1's uuid%} to now
+					set {muteMod::%arg-1's uuid%} to player
+					clear {muteReason::%arg-1's uuid%}
+					pS("1", "0.6", "t")
+					{_r} != false:
+						set {muteReason::%arg-1's uuid%} to {_r}
+						broadcast "&3%player% &7muted &3%arg-1% &7for &c%{_r}% &7[%{muteSpan::%arg-1's uuid%}%]"
+					else:
+						broadcast "&3%player% &7muted &3%arg-1% &7[%{muteSpan::%arg-1's uuid%}%]"
+				else:
+					send "&cThe timespan should be greater than 0 seconds."
+		else:
+			send "&c/mute [player] [timespan] <reason>"
+
+#Unmute
+command /unmute [<offlineplayer>] [<text>]:
+	aliases: /basics:unmute
+	permission: basics.unmute
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			clear {isMuted::%arg-1's uuid%}
+			clear {muteSpan::%arg-1's uuid%}
+			clear {muteStamp::%arg-1's uuid%}
+			clear {muteMod::%arg-1's uuid%}
+			clear {muteReason::%arg-1's uuid%}		
+			pS("1", "0.8", "p")
+			arg-2 is set:
+				broadcast "&3%player% &7unmuted &3%arg-1% &7for &c%arg-2%"
+			else:
+				broadcast "&3%player% &7unmuted &3%arg-1%"
+		else:
+			send "&c/unmute [player] <reason>"
+
+#Unban
+command /unban [<offlineplayer>] [<text>]:
+	aliases: /basics:unban
+	permission: basics.unban
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			unban arg-1
+			clear {isBanned::%arg-1's uuid%}
+			clear {banSpan::%arg-1's uuid%}
+			clear {BanStamp::%arg-1's uuid%}
+			clear {banMod::%arg-1's uuid%}
+			clear {banReason::%arg-1's uuid%}		
+			pS("1", "0.8", "p")
+			arg-2 is set:
+				broadcast "&3%player% &7unbanned &3%arg-1% &7for &c%arg-2%"
+			else:
+				broadcast "&3%player% &7unbanned &3%arg-1%"
+		else:
+			send "&c/unban [player] <reason>"
+
+#Functions/Timing
+function timeParser(p: text) :: objects:
+	set {_invalid} to false
+	add "y" to {_validdate::*}
+	add "mo" to {_validdate::*}
+	add "w" to {_validdate::*}
+	add "d" to {_validdate::*}
+	add "h" to {_validdate::*}
+	add "s" to {_validdate::*}
+	add "m" to {_validdate::*}
+	set {_secres} to 0
+	set {_help} to 0
+	set {_terminate} to length of {_p}
+	set {_totalnum} to 0
+	set {_numlock} to 0
+	while {_help} < {_terminate}:
+		set {_char} to the first character of {_p}
+		set {_yeet} to false
+		if {_char} is "0":
+			set {_yeet} to true
+		if {_char} is "1":
+			set {_yeet} to true
+		if {_char} is "2":
+			set {_yeet} to true
+		if {_char} is "3":
+			set {_yeet} to true
+		if {_char} is "4":
+			set {_yeet} to true
+		if {_char} is "5":
+			set {_yeet} to true
+		if {_char} is "6":
+			set {_yeet} to true
+		if {_char} is "7":
+			set {_yeet} to true
+		if {_char} is "8":
+			set {_yeet} to true
+		if {_char} is "9":
+			set {_yeet} to true
+		if {_yeet} is true:
+			if {_numlock} is 2:
+				if {_validdate::*} does not contain {_ahh}:
+					set {_invalid} to true
+				else:
+					set {_tempres} to parseShortTime({_totalnum}, {_ahh})
+					add {_tempres} to {_secres}
+				set {_ahh} to ""
+				set {_totalnum} to 0
+			set {_numlock} to 1
+			set {_what} to {_char} parsed as number
+			set {_totalnum} to {_totalnum} * 10
+			add {_what} to {_totalnum}
+		else:
+			set {_ahh} to join {_ahh} and {_char}
+			if {_numlock} is 1:
+				set {_numlock} to 2
+		set {_p} to last (length of {_p} - 1) characters of {_p}
+		add 1 to {_help}
+	if {_validdate::*} does not contain {_ahh}:
+		set {_invalid} to true
+	else:
+		set {_tempres} to parseShortTime({_totalnum}, {_ahh})
+		add {_tempres} to {_secres}
+	if {_invalid} is true:
+		add "error" to {_package::*}
+		return {_package::*}
+	else:
+		add {_secres} to {_package::*}
+		return {_package::*}
+
+function parseShortTime(n: number, s: text) :: number:
+	add "y" to {_validdate::*}
+	add "mo" to {_validdate::*}
+	add "w" to {_validdate::*}
+	add "d" to {_validdate::*}
+	add "h" to {_validdate::*}
+	add "s" to {_validdate::*}
+	add "m" to {_validdate::*}
+	set {_zero} to 0
+	if {_validdate::*} does not contain {_s}:
+		return {_zero}
+	if {_s} is "m":
+		set {_n} to {_n} * 60
+	if {_s} is "h":
+		set {_n} to {_n} * 3600
+	if {_s} is "d":
+		set {_n} to {_n} * 86400
+	if {_s} is "w":
+		set {_n} to {_n} * 604800
+	if {_s} is "mo":
+		set {_n} to {_n} * 2592000
+	if {_s} is "y":
+		set {_n} to {_n} * 31557600
+	return {_n}
