@@ -1,2 +1,2 @@
-# CommandBlocker
-Simple and efficient command blocker
+# Basics
+Everything your server needs, in one plugin.
