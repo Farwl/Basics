@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.0.1
+	ver: 0.0.2
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -361,7 +361,7 @@ command /gms [<player>]:
 
 command /gmsp [<player>]:
 	aliases: /basics:gmsp
-	permission: basics.gamemode.gmc
+	permission: basics.gamemode.spectator
 	permission message: {@np}
 	trigger:
 		arg-1 is set:
@@ -460,7 +460,7 @@ command /revertwarn [<offlineplayer>] [<text>]:
 	permission message: {@np}
 	trigger:
 		arg-1 is set:
-			{warns::%player's uuid%} > 0:
+			{warns::%player's uuid%} <= 0:
 				send "&cThat player doesn't have any warnings!" 
 			else:	
 				pS("1", "0.8", "p")
@@ -663,17 +663,20 @@ command /unban [<offlineplayer>] [<text>]:
 	permission message: {@np}
 	trigger:
 		arg-1 is set:
-			unban arg-1
-			clear {isBanned::%arg-1's uuid%}
-			clear {banSpan::%arg-1's uuid%}
-			clear {BanStamp::%arg-1's uuid%}
-			clear {banMod::%arg-1's uuid%}
-			clear {banReason::%arg-1's uuid%}		
-			pS("1", "0.8", "p")
-			arg-2 is set:
-				broadcast "&3%player% &7unbanned &3%arg-1% &7for &c%arg-2%"
+			arg-1 is banned:
+				unban arg-1
+				clear {isBanned::%arg-1's uuid%}
+				clear {banSpan::%arg-1's uuid%}
+				clear {BanStamp::%arg-1's uuid%}
+				clear {banMod::%arg-1's uuid%}
+				clear {banReason::%arg-1's uuid%}		
+				pS("1", "0.8", "p")
+				arg-2 is set:
+					broadcast "&3%player% &7unbanned &3%arg-1% &7for &c%arg-2%"
+				else:
+					broadcast "&3%player% &7unbanned &3%arg-1%"
 			else:
-				broadcast "&3%player% &7unbanned &3%arg-1%"
+				send "&cThat player isn't banned!"
 		else:
 			send "&c/unban [player] <reason>"
 
@@ -695,25 +698,7 @@ function timeParser(p: text) :: objects:
 	while {_help} < {_terminate}:
 		set {_char} to the first character of {_p}
 		set {_yeet} to false
-		if {_char} is "0":
-			set {_yeet} to true
-		if {_char} is "1":
-			set {_yeet} to true
-		if {_char} is "2":
-			set {_yeet} to true
-		if {_char} is "3":
-			set {_yeet} to true
-		if {_char} is "4":
-			set {_yeet} to true
-		if {_char} is "5":
-			set {_yeet} to true
-		if {_char} is "6":
-			set {_yeet} to true
-		if {_char} is "7":
-			set {_yeet} to true
-		if {_char} is "8":
-			set {_yeet} to true
-		if {_char} is "9":
+		{_char} = "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9":
 			set {_yeet} to true
 		if {_yeet} is true:
 			if {_numlock} is 2:
