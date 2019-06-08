@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.0.2
+	ver: 0.1.1
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
