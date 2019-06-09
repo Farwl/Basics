@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.0.1
+	ver: 0.1.2
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -34,6 +34,9 @@ Options:
 
 	commandBlocker: true
 	# Enable or disable the built-in command blocker feature
+
+	staffChat: true
+	# Enable or disable the built-in staff chat feature
 
 # CONFIG 
 
@@ -144,13 +147,30 @@ chat:
 				else:
 					send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%"
 	else:
-		player has permission "basics.chat.white":
-			set message to "&f%message%"
+		{chat} = "muted":
+			player doesn't have permission "chat.mute.bypass":
+				cancel event
+				send "&cChat is muted!"
+		else:
+			{@staffChat} = true:
+				{staffchat::%player's uuid%} = true:		
+					cancel event	
+					set {_p} to player's displayname
+					set {_m} to message
+					loop all players:
+						set {_lp} to loop-player
+						set {_lpu} to loop-player's uuid
+						player has permission "basics.staffchat.view":
+							send "&e[SC] %{_p}%&7: &b%{_m}%" to {_lp}
+			else:
+				player has permission "basics.chat.white":
+					set message to "&f%message%"
+			
 
 command:
 	{@commandBlocker} = true:
 		loop {blockedcommands::*}:
-			loop-value = "%command%":
+			loop-value = command:
 				cancel event
 				send "&cCommand blocked."
 
@@ -401,6 +421,25 @@ command /heal [<player>]:
 			{@feedWhenHeal} = true:
 				set the player's food level to 10
 
+#MuteChat
+command /mutechat [<text>]:
+	aliases: /basics:mutechat, /mc, /basics:mc
+	permission: basics.mutechat
+	permission message: {@np}
+	trigger:
+		{chat} = "muted":
+			set {chat} to "unmuted"
+			arg-1 is set:
+				broadcast "&3%player% &7unmuted chat for &c%arg-1%"		
+			else:
+				broadcast "&3%player% &7unmuted chat"
+		else:
+			set {chat} to "muted"
+			arg-1 is set:
+				broadcast "&3%player% &7muted chat for &c%arg-1%"
+			else:
+				broadcast "&3%player% &7muted chat"
+
 #SetSpawn
 command /setspawn:
 	aliases: /basics:setspawn
@@ -436,6 +475,19 @@ command /spawn [<player>]:
 					teleport player to spawn
 			else:
 				teleport player to spawn
+
+#Staffchat
+command /staffchat:
+	aliases: /basics:staffchat, /sc, /basics:sc
+	permission: basics.staffchat
+	permission message: {@np}
+	trigger:
+		{staffchat::%player's uuid%}:
+			set {staffchat::%player's uuid%} to false
+			send "&cStaff chat toggled off."
+		else:
+			set {staffchat::%player's uuid%} to true
+			send "&aStaff chat toggled on."
 
 # Punishments
 
