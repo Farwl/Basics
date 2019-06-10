@@ -65,6 +65,11 @@ function pS(v: string, p: string, id: string):
 		else if {_id} = "f" or "flap":
 			play sound "entity.enderdragon.flap" with volume {_v} with pitch {_p} at loop-player for loop-player
 
+function spawn(p: player):
+	teleport {_p} to {spawn}
+	set {_p}'s yaw to {spawn}'s yaw
+	set {_p}'s pitch to {spawn}'s pitch
+
 # Events
 
 #Hunger
@@ -451,7 +456,9 @@ command /setspawn:
 	permission: basics.setspawn
 	permission message: {@np}
 	trigger:
-		set spawn to location of player
+		set {spawn} to location of player
+		set {spawn}'s pitch to player's pitch
+		set {spawn}'s yaw to player's yaw
 		send "&3Spawn set. &b(%location of player%)"
 
 #Spawn
@@ -463,7 +470,7 @@ command /spawn [<player>]:
 		arg-1 is set:
 			arg-1 is online:
 				player has permission "basics.spawn.others":
-					teleport arg-1 to spawn
+					spawn(arg-1)
 					send "&3Teleporting..." to player
 				else:
 					enp(player)
