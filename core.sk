@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.1.2_1
+	ver: 0.1.2
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -493,6 +493,42 @@ command /staffchat:
 		else:
 			set {staffchat::%player's uuid%} to true
 			send "&aStaff chat toggled on."
+
+#Teleport
+command /teleport [<text>]:
+	aliases: /basics:teleport, /tp, /basics:tp
+	permission: basics.teleport
+	permission message: {@np}
+	trigger:
+		set {_a::*} to (the args) split at " "
+		{_a::1} is set:
+			{_a::2} is set:
+				{_a::1} and {_a::2} are numbers:
+					{_a::3} is set:
+						set {_1} to ({_a::1} parsed as number)
+						set {_2} to ({_a::2} parsed as number)
+						set {_3} to ({_a::3} parsed as number)
+						teleport player to location ({_a::1}, {_a::2}, {_a::3})
+					else:
+						send "&cThere must be 3 values for coordinate teleportations."
+				else:
+					set {_p} to ({_a::1} parsed as player)
+					set {_p1} to ({_a::2} parsed as player)
+					{_p} and {_p1} are online:
+						teleport {_p} to {_p1}
+						send "&3Teleporting..."
+						send "&3Teleporting..." to {_p}
+					else:
+						eop(player)
+			else:
+				set {_p} to ({_a::1} parsed as player)
+				{_p} is online:
+					teleport player to {_p}
+					send "&3Teleporting..."
+				else:
+					eop(player)
+		else:
+			send "&c/teleport [player] <otherplayer>"
 
 # Punishments
 
