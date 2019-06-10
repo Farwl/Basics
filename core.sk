@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.1.2
+	ver: 0.1.2_1
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -37,6 +37,9 @@ Options:
 
 	staffChat: true
 	# Enable or disable the built-in staff chat feature
+	
+	spawnOnJoin: true
+	# Checks if Basics should teleport players to spawn when they join
 
 # CONFIG 
 
@@ -78,6 +81,8 @@ first join:
 join:
 	{@playerJoinBroadcast} = true:
 		broadcast "&a[+] &7%player%"
+	{@spawnOnJoin} = true:
+		teleport player to spawn
 
 quit:
 	{@playerQuitBroadcast} = true:
