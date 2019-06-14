@@ -28,18 +28,11 @@ Options:
 	# The number of accounts allowed to be connected to your server from the same IP at one time
 	# Must be set to an integer, set to 0 to disable
 
-	spawnDelay: 5
-	# The delay, in seconds, before a player is teleported to spawn
-	# Must be set to an integer, set to 0 to disable
-
 	commandBlocker: true
 	# Enable or disable the built-in command blocker feature
 
 	staffChat: true
 	# Enable or disable the built-in staff chat feature
-	
-	spawnOnJoin: true
-	# Checks if Basics should teleport players to spawn when they join
 
 # CONFIG 
 
@@ -65,19 +58,12 @@ function pS(v: string, p: string, id: string):
 		else if {_id} = "f" or "flap":
 			play sound "entity.enderdragon.flap" with volume {_v} with pitch {_p} at loop-player for loop-player
 
-function spawn(p: player):
-	teleport {_p} to {spawn}
-	set {_p}'s yaw to {spawn}'s yaw
-	set {_p}'s pitch to {spawn}'s pitch
-
 # Events
 
-#Hunger
 food bar change:
 	{@hunger} != true:
 		cancel event
 
-#Connections
 first join:
 	add 1 to {joins::*}
 	{@welcomeNewPlayers} = true:
@@ -86,25 +72,20 @@ first join:
 join:
 	{@playerJoinBroadcast} = true:
 		broadcast "&a[+] &7%player%"
-	{@spawnOnJoin} = true:
-		teleport player to spawn
 
 quit:
 	{@playerQuitBroadcast} = true:
 		broadcast "&c[-] &7%player%"
 
-#Load
 skript load:
 	send "%nl%[Basics] Version {@ver} loaded." to console
 
-#BlockedCommands
 command:
 	command sender is player:
 		command is "reload" or "rl" or "essentials:help" or "ver" or "version" or "?" or "help" or "ehelp" or "bukkit:?" or "bukkit:about" or "bukkit:help" or "bukkit:reload" or "bukkit:rl" or "bukkit:timings" or "bukkit:ver" or "bukkit:version" or "pl" or "plugins" or "plugin" or "bukkit:pl" or "bukkit:plugins":
 			cancel event
 			enp(player)
 
-#ConnectWhileBanned
 connect:
 	{isBanned::%player's uuid%} = true:
 		{banSpan::%player's uuid%} = "PERM":
@@ -134,7 +115,6 @@ connect:
 						if {_ips} > {@accountsPerIP}:
 							kick player due to "&cYou have too many accounts connected, the maximum is {@accountsPerIP}"
 
-#Chat
 chat:
 	{isMuted::%player's uuid%} = true:
 		{muteSpan::%player's uuid%} = "PERM":
@@ -186,7 +166,6 @@ command:
 
 # Commands
 
-#Basics
 command /basics [<text>]:
 	aliases: /basics:basics
 	permission: basic.admin
@@ -203,7 +182,6 @@ command /basics [<text>]:
 		else:
 			send "&c/basics [reload|version]"
 
-#ClearInv
 command /clear [<player>]:
 	aliases: /basics:ci, /ci, /basics:clear
 	permission: basics.clear
@@ -222,7 +200,6 @@ command /clear [<player>]:
 			clear player's inventory
 			send "&3Inventory cleared." to player
 
-#CommandBlocker
 command /commandblocker [<text>]:
 	aliases: /basics:commandblocker, /cb, /basics:cb
 	permission: basics.commandblocker
@@ -262,7 +239,6 @@ command /commandblocker [<text>]:
 			send "&c/cb [add/remove/list] [command]"
 
 
-#Feed
 command /feed [<player>]:
 	aliases: /basics:feed
 	permission: basics.feed
@@ -278,7 +254,6 @@ command /feed [<player>]:
 			set the player's food level to 10
 			send "&3You have been saturated." to player
 
-#Flight
 command /fly [<player>]:
 	aliases: /basics:fly
 	permission: basics.fly,
@@ -305,7 +280,6 @@ command /fly [<player>]:
 				enable flight for player
 				send "&3You can now fly." to player
 
-#Gamemode
 command /gamemode [<text>] [<player>]:
 	aliases: /basics:gamemode, /gm, /basics:gm
 	permission: basics.gamemode
@@ -334,7 +308,6 @@ command /gamemode [<text>] [<player>]:
 		else:
 			send "&c/gamemode [gamemode] [player]"
 
-#GamemodeShortAliases
 command /gmc [<player>]:
 	aliases: /basics:gmc
 	permission: basics.gamemode.creative
@@ -408,7 +381,6 @@ command /gmsp [<player>]:
 			set player's gamemode to spectator
 			gmU(player)
 
-#Heal
 command /heal [<player>]:
 	aliases: /basics:heal
 	permission: basics.heal
@@ -431,7 +403,6 @@ command /heal [<player>]:
 			{@feedWhenHeal} = true:
 				set the player's food level to 10
 
-#MuteChat
 command /mutechat [<text>]:
 	aliases: /basics:mutechat, /mc, /basics:mc
 	permission: basics.mutechat
@@ -440,9 +411,9 @@ command /mutechat [<text>]:
 		{chat} = "muted":
 			set {chat} to "unmuted"
 			arg-1 is set:
-				broadcast "&3%player% &7unmuted chat for &c%arg-1%"		
+				broadcast "&b%player% &3unmuted chat for &a%arg-1%"		
 			else:
-				broadcast "&3%player% &7unmuted chat"
+				broadcast "&b%player% &3unmuted chat"
 		else:
 			set {chat} to "muted"
 			arg-1 is set:
@@ -450,45 +421,34 @@ command /mutechat [<text>]:
 			else:
 				broadcast "&3%player% &7muted chat"
 
-#SetSpawn
-command /setspawn:
-	aliases: /basics:setspawn
-	permission: basics.setspawn
+command /report [<offlineplayer>] [<text>]:
+	aliases: /basics:report
+	permission: basics.report
 	permission message: {@np}
 	trigger:
-		set {spawn} to location of player
-		set {spawn}'s pitch to player's pitch
-		set {spawn}'s yaw to player's yaw
-		send "&3Spawn set. &b(%location of player%)"
-
-#Spawn
-command /spawn [<player>]:
-	aliases: /basics:spawn
-	permission: basics.spawn
-	permission message: {@np}
-	trigger:
-		arg-1 is set:
-			arg-1 is online:
-				player has permission "basics.spawn.others":
-					spawn(arg-1)
-					send "&3Teleporting..." to player
-				else:
-					enp(player)
-			else:
-				eop(player)
+		arg-1 and arg-2 are set:
+			add "%player%,%arg-1%,%arg-2%" to {reports::*}
+			send "&aReport submitted successully, thanks!"
 		else:
-			{@spawnDelay} > 0:
-				player has permission "basics.spawn.bypassDelay":
-					teleport player to spawn
-					send "&3Teleporting..."
-				else:
-					send "&3Teleporting..."
-					wait {@spawnDelay} seconds
-					teleport player to spawn
-			else:
-				teleport player to spawn
+			send "&c/report [player] [reason] <tooltip:&aCan be URLs to images, videos, etc.><evidence>"
 
-#Staffchat
+command /reports:
+	aliases: /basics:reports
+	permission: basics.reports
+	permission message: {@np}
+	trigger:
+		create a gui with virtual chest with 6 rows named "&8Reports":
+			loop {reports::*}:
+				set {_l} to loop-value
+				set {_s::*} to {_l} split at ","
+				set {_reportedPlayer} to {_s::2}
+				set {_reporter} to {_s::1}
+				set {_reason} to {_s::3}
+				make next gui slot with skull of ("%{_reportedPlayer}%" parsed as offline player) named "&3%{_reportedPlayer}%" with lore "&7Reported by: &b%{_reporter}%", "&7Reason: &b%{_reason}%", "", and "&7Click to &cresolve &7report":
+					remove {_l} from {reports::*}
+					make player execute command "reports"
+		open last gui to player
+
 command /staffchat:
 	aliases: /basics:staffchat, /sc, /basics:sc
 	permission: basics.staffchat
@@ -501,7 +461,6 @@ command /staffchat:
 			set {staffchat::%player's uuid%} to true
 			send "&aStaff chat toggled on."
 
-#Teleport
 command /teleport [<text>]:
 	aliases: /basics:teleport, /tp, /basics:tp
 	permission: basics.teleport
@@ -539,7 +498,6 @@ command /teleport [<text>]:
 
 # Punishments
 
-#Warn
 command /warn [<offlineplayer>] [<text>]:
 	aliases: /basics:warn
 	permission: basics.warn
@@ -554,7 +512,6 @@ command /warn [<offlineplayer>] [<text>]:
 		else:
 			send "&c/warn [player] <reason>"
 
-#RevertWarn
 command /revertwarn [<offlineplayer>] [<text>]:
 	aliases: /basics:revertwarn, /unwarn, /basics:unwarn
 	permission: basics.revertwarn
@@ -573,7 +530,6 @@ command /revertwarn [<offlineplayer>] [<text>]:
 		else:
 			send "&c/revertwarn [player] <reason>"
 
-#Clearchat
 command /clearchat:
 	aliases: /basics:clearchat, /cc, /basics:cc
 	permission: basics.clearchat
@@ -583,7 +539,6 @@ command /clearchat:
 			broadcast " "
 		broadcast "&7Chat was cleared by &3%player%"
 
-#Kick
 command /kick [<player>] [<text>]:
 	aliases: /basics:kick
 	permission: basics.kick
@@ -602,7 +557,6 @@ command /kick [<player>] [<text>]:
 		else:
 			send "&c/kick [player] <reason>"
 
-#Kickall
 command /kickall [<text>]:
 	aliases: /basics:kickall
 	permission: basics.kickall
@@ -621,7 +575,6 @@ command /kickall [<text>]:
 				loop-player != {_p}:
 					kick loop-player due to "&cYou were kicked from the server."
 
-#Ban
 command /ban [<offlineplayer>] [<text>]:
 	aliases: /basics:ban
 	permission: basics.ban
@@ -681,7 +634,6 @@ command /ban [<offlineplayer>] [<text>]:
 			send "&c/ban [player] [timespan] <reason>"
 
 
-#Mute
 command /mute [<offline player>] [<text>]:
 	aliases: /basics:mute
 	permission: basics.mute
@@ -737,27 +689,21 @@ command /mute [<offline player>] [<text>]:
 		else:
 			send "&c/mute [player] [timespan] <reason>"
 
-#Unmute
 command /unmute [<offlineplayer>] [<text>]:
 	aliases: /basics:unmute
 	permission: basics.unmute
 	permission message: {@np}
 	trigger:
 		arg-1 is set:
-			clear {isMuted::%arg-1's uuid%}
-			clear {muteSpan::%arg-1's uuid%}
-			clear {muteStamp::%arg-1's uuid%}
-			clear {muteMod::%arg-1's uuid%}
-			clear {muteReason::%arg-1's uuid%}		
+			clear {isMuted::%arg-1's uuid%}, {muteSpan::%arg-1's uuid%}, {muteStamp::%arg-1's uuid%}, {muteMod::%arg-1's uuid%}, and {muteReason::%arg-1's uuid%}
 			pS("1", "0.8", "p")
 			arg-2 is set:
-				broadcast "&3%player% &7unmuted &3%arg-1% &7for &c%arg-2%"
+				broadcast "&b%player% &3unmuted &b%arg-1% &7for &a%arg-2%"
 			else:
-				broadcast "&3%player% &7unmuted &3%arg-1%"
+				broadcast "&b%player% &3unmuted &b%arg-1%"
 		else:
 			send "&c/unmute [player] <reason>"
 
-#Unban
 command /unban [<offlineplayer>] [<text>]:
 	aliases: /basics:unban
 	permission: basics.unban
@@ -766,22 +712,17 @@ command /unban [<offlineplayer>] [<text>]:
 		arg-1 is set:
 			arg-1 is banned:
 				unban arg-1
-				clear {isBanned::%arg-1's uuid%}
-				clear {banSpan::%arg-1's uuid%}
-				clear {BanStamp::%arg-1's uuid%}
-				clear {banMod::%arg-1's uuid%}
-				clear {banReason::%arg-1's uuid%}		
+				clear {isBanned::%arg-1's uuid%}, {banSpan::%arg-1's uuid%}, {BanStamp::%arg-1's uuid%}, {banMod::%arg-1's uuid%}, and {banReason::%arg-1's uuid%}	
 				pS("1", "0.8", "p")
 				arg-2 is set:
-					broadcast "&3%player% &7unbanned &3%arg-1% &7for &c%arg-2%"
+					broadcast "&b%player% &3unbanned &b%arg-1% &7for &a%arg-2%"
 				else:
-					broadcast "&3%player% &7unbanned &3%arg-1%"
+					broadcast "&b%player% &3unbanned &b%arg-1%"
 			else:
 				send "&cThat player isn't banned!"
 		else:
 			send "&c/unban [player] <reason>"
 
-#Functions/Timing
 function timeParser(p: text) :: objects:
 	set {_invalid} to false
 	add "y" to {_validdate::*}
