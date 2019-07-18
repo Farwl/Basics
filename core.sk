@@ -4,7 +4,7 @@
 # # #
 
 Options:
-	ver: 0.1.2
+	ver: 0.1.5
 	np: &cYou're not allowed to use this command!
 
 # CONFIG 
@@ -80,12 +80,6 @@ quit:
 skript load:
 	send "%nl%[Basics] Version {@ver} loaded." to console
 
-command:
-	command sender is player:
-		command is "reload" or "rl" or "essentials:help" or "ver" or "version" or "?" or "help" or "ehelp" or "bukkit:?" or "bukkit:about" or "bukkit:help" or "bukkit:reload" or "bukkit:rl" or "bukkit:timings" or "bukkit:ver" or "bukkit:version" or "pl" or "plugins" or "plugin" or "bukkit:pl" or "bukkit:plugins":
-			cancel event
-			enp(player)
-
 connect:
 	{isBanned::%player's uuid%} = true:
 		{banSpan::%player's uuid%} = "PERM":
@@ -95,11 +89,7 @@ connect:
 				kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%"
 		else:
 			difference between {banStamp::%player's uuid%} and now >= {banSpan::%player's uuid%}:
-				clear {isBanned::%player's uuid%}
-				clear {banSpan::%player's uuid%}
-				clear {banStamp::%player's uuid%}
-				clear {banMod::%player's uuid%}
-				clear {banReason::%player's uuid%}				
+				clear {isBanned::%player's uuid%}, {banSpan::%player's uuid%}, {banStamp::%player's uuid%}, {banMod::%player's uuid%}, and {banReason::%player's uuid%}			
 			else:
 				{banReason::%player's uuid%} != false:
 					kick player due to "&cYou are banned!%nl%&c* &7Since: &c%{banStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{banMod::%player's uuid%}%%nl%&c* &7Length: &c%{banSpan::%player's uuid%}%%nl%&c* &7Reason: &c%{banReason::%player's uuid%}%"
@@ -125,11 +115,7 @@ chat:
 				send "&cYou are muted!%nl%&c* &7Since: &c%{muteStamp::%player's uuid%}%%nl%&c* &7Mod: &c%{muteMod::%player's uuid%}%%nl%&c* &7Length: &c%{muteSpan::%player's uuid%}%"
 		else:
 			difference between {muteStamp::%player's uuid%} and now >= {muteSpan::%player's uuid%}:
-				clear {isMuted::%player's uuid%}
-				clear {muteSpan::%player's uuid%}
-				clear {muteStamp::%player's uuid%}
-				clear {muteMod::%player's uuid%}
-				clear {muteReason::%player's uuid%}				
+				clear {isMuted::%player's uuid%}, {muteSpan::%player's uuid%}, {muteStamp::%player's uuid%}, {muteMod::%player's uuid%}, and {muteReason::%player's uuid%}		
 			else:
 				cancel event
 				{muteReason::%player's uuid%} != false:
@@ -174,9 +160,9 @@ command /basics [<text>]:
 		arg-1 is set:
 			arg-1 = "reload" or "rl":
 				execute console command "/sk reload %script%"
-				send "&dBasics reloaded &c{@ver}"
+				send "&aBasics reloaded &c{@ver}"
 			else if arg-1 = "ver" or "v":
-				send "&dBasics &c{@ver}"
+				send "&aBasics &c{@ver}"
 			else:
 				send "&c/basics [reload|version]"
 		else:
@@ -402,6 +388,28 @@ command /heal [<player>]:
 			send "&3You have been healed." to player
 			{@feedWhenHeal} = true:
 				set the player's food level to 10
+
+command /kill [<text>]:
+	aliases: /basics:kill
+	permission: basics.kill
+	permission message: {@np}
+	trigger:
+		arg-1 is set:
+			arg-1 = "@a":	
+				kill all players
+				send "&aKilled %amount of players% players."
+			arg-1 = "@e":
+				kill all entities
+				send "&aKilled %size of all entities% entities."
+			else:
+				set {_p} to arg-1 parsed as player
+				{_p} is online:
+					kill {_p}
+					send "&aKilled %arg-1%"
+				else:
+					eop(player)
+		else:
+			send "&c/kill [player]"
 
 command /mutechat [<text>]:
 	aliases: /basics:mutechat, /mc, /basics:mc
